@@ -1,5 +1,6 @@
 import os
 
+import requests
 from googleapiclient.discovery import build
 
 from dotenv import load_dotenv
@@ -48,6 +49,8 @@ class SearchEngine:
             if item["title"] == "Untitled":
                 skipped_links.append(item["link"])
                 continue
+            if item.get("snippet", None) is None:
+                item["snippet"] = "Тут мог быть ваш текст 😎"
             result.append(SearchResult(**item))
 
         return result
@@ -57,6 +60,7 @@ class SearchEngine:
 
 if __name__ == "__main__":
     load_dotenv()
-    answer = SearchEngine.run("Структура ЧелГУ: какие факультеты и институты входят в состав университета?")
+
+    answer = SearchEngine.run("Контактная информация ЧелГУ")
     print(answer)
     pass

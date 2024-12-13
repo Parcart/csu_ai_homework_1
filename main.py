@@ -15,14 +15,9 @@ from model import LLMAnswer, LLMYandex, ResponseType
 from parser import get_news
 
 
-def escape_markdown_v2(text):
-    # Список символов для экранирования, включая символ "!".
-    special_chars = r'[_*`\[\]()~>#+\-=|{}.!]'
+def escape_markdown_v2(text_to_escape):
+    return re.sub(r'([_*\[\]()~>#+\-=|{}.!?`])', r'\\\1', text_to_escape)
 
-    # Экранируем каждый символ, который нуждается в экранировании.
-    escaped_text = re.sub(r'([_*\[\]()~>#+\-=|{}.!`])', r'\\\1', text)
-
-    return escaped_text
 
 load_dotenv()
 
@@ -43,8 +38,9 @@ def news(message, data):
     user: User = data["user"]
     news = get_news()
     for newa in news:
-         bot.send_photo(chat_id=message.chat.id,photo=newa.image,
-                        caption=f"<b>{newa.title}</b>\n\n{newa.text}\n{f'<a href="{newa.link}">Ссылка</a>'}", parse_mode='HTML')
+        bot.send_photo(chat_id=message.chat.id, photo=newa.image,
+                       caption=f"<b>{newa.title}</b>\n\n{newa.text}\n{f'<a href="{newa.link}">Ссылка</a>'}",
+                       parse_mode='HTML')
     # TODO Обращение к парсеру
 
 
@@ -53,6 +49,7 @@ def message_handler(message, data):
     user: User = data["user"]
     user.in_search = False
     user.send(text["back_text"], user.generate_main_menu())
+
 
 @bot.message_handler(content_types=["text"], func=lambda message: message.text == text['search_button'])
 def start_search(message, data):
@@ -67,13 +64,16 @@ def search(message, data):
     current_message = user.send(text["start_search"], user.generate_search_menu())
 
     answer = LLMYandex.processing_query(message.text)
+    print("INFO: answer: " + answer)
     try:
         cleaned_json_str = answer.strip('```').strip()
         answer = LLMAnswer.model_validate_json(cleaned_json_str)
     except Exception as e:
-        bot.edit_message_text(text=answer, chat_id=current_message.chat.id, message_id=current_message.message_id)
+        # bot.edit_message_text(text=answer, chat_id=current_message.chat.id, message_id=current_message.message_id)
+        bot.delete_message(current_message.chat.id, current_message.message_id)
+        user.send(answer, user.generate_search_menu())
         return
-        
+
     if answer.response_type == ResponseType.assistent:
         bot.delete_message(current_message.chat.id, current_message.message_id)
         user.send(answer.message, user.generate_search_menu())
@@ -93,7 +93,7 @@ def search(message, data):
         result_answer += f"\n\n{title}\n{escape_markdown_v2(item.snippet)}"
 
     bot.delete_message(current_message.chat.id, current_message.message_id)
-    user.send(result_answer, user.generate_search_menu(), parse_mode = 'MarkdownV2')
+    user.send(result_answer, user.generate_search_menu(), parse_mode='MarkdownV2')
 
 
 @bot.message_handler(func=lambda message: True)

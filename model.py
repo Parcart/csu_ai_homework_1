@@ -12,11 +12,19 @@ from langchain.chains import LLMChain
 
 from langchain_core.prompts import PromptTemplate
 
+prompt = """
+Ты ии ассистент для ЧелГУ.
+ Если вопрос касается ЧелГУ  используй  researcher и в ответе сформулируй только поисковой запрос, который более релевантно будет находить информацию в google. Используй researcher во всех вопросам о челгу и не уточняй у пользователя дополнительную информацию. 
+ Если можешь ответить сам, то используй assistent, но не прикладывай ссылок. Если нужно найти информацию, что касается информации о ЧелГУ то используй researcher и отвечай поисковым запросом, иначе отвечай пользователю, но не уточняя у него информацию и не спрашивая дополнительную информацию.
+Формат ответа json {"response_type": "assistent|researcher","message": "Твой ответ"}
+"""
+
 # sdk = YCloudML(folder_id="", auth="<токен>")
 
 # model = sdk.models.completions('yandexgpt')
 # model = model.configure(temperature=0.5)
 # result = model.run("Что такое небо?")
+
 
 # for alternative in result:
 #     print(alternative)
@@ -46,7 +54,7 @@ class LLMYandex:
     @classmethod
     def processing_query(cls, query: str) -> str:
         messages = [
-            SystemMessage(content='Ты ии ассистент для ЧелГУ, У тебя есть два варианта ответа[assistent,researcher]. Если вопрос касается ЧелГУ  используй  researcher и в сообщении генерируй запрос для поиска в поисковике, который более релевантно будет находить информацию в google, не уточняй у пользователя. Используй researcher во всех впорам о челгу. Если assistent отвечай сам. в формате json {"response_type": "assistent|researcher","message": "Ответ"}'),
+            SystemMessage(content=prompt),
             HumanMessage(content=query)
         ]
         return cls._invoke(messages)
@@ -55,4 +63,4 @@ class LLMYandex:
 
 if __name__ == "__main__":
     load_dotenv()
-    print(LLMYandex.processing_query("Структуру хочу узнать"))
+    print(LLMYandex.processing_query("А пицка вкусная?"))
