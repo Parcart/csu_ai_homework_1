@@ -83,8 +83,8 @@ def search(message, data):
     # bot.edit_message_text(text=text["end_search"], chat_id=current_message.chat.id, message_id=current_message.message_id)
 
     if len(result) == 0:
-        user.in_search = False
-        user.send(text["empty_search"], user.generate_main_menu())
+        bot.delete_message(current_message.chat.id, current_message.message_id)
+        user.send(text["empty_search"], user.generate_search_menu())
         return
 
     result_answer = "Вот что мне удалось найти по вашему запросу\\!"
